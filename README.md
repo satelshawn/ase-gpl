@@ -60,10 +60,10 @@ what every destination format wants.
 **Blocks are skipped by their own length**, never by what was parsed. A file holding something
 unexpected stays readable instead of desynchronising from the first surprise.
 
-**Malformed GPL lines are skipped, not fatal.** These files are hand-edited more often than
+**Malformed `.gpl` lines are skipped, not fatal.** These files are hand-edited more often than
 not. A line with a channel over 255, or no numbers at all, is ignored and the rest is read.
 
-**Encoding falls back.** GPL is read as UTF-8, then as Windows-1252 for older files written
+**Encoding falls back.** A `.gpl` file is read as UTF-8, then as Windows-1252 for older files written
 before anyone agreed on encodings.
 
 ## What it does not do
@@ -100,3 +100,6 @@ switch your network off, and it still works.
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
+
+The `gpl` in the name is the GIMP palette file extension, not the GNU General Public
+Licence. This library is MIT.
