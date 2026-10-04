@@ -54,6 +54,11 @@ const blob = new Blob([writeGpl(colours, 'palette')], { type: 'text/plain' });
 Swatch names are read, kept and written back. Non-ASCII names round-trip; one of the test
 vectors is named `Zoë’s Blue` for that reason.
 
+**Unnamed stays unnamed.** GPL cannot express "no name": the format needs something after the
+numbers, so it writes `Untitled`. Reading that back as a real name would be lossy, so
+`Untitled` means unnamed and an ASE written from it carries an empty name. Suisai then gives
+it one from its colour list, which is what should happen to a swatch nobody named.
+
 **Groups are read past.** ASE nests colours in groups. The result is a flat list, which is
 what every destination format wants.
 
@@ -88,6 +93,9 @@ npm test      # or: node test/run.js
 The vectors in `test/vectors/` came from [Suisai](https://suisai.design), whose own reader is
 the reference implementation. `sample.ase` converts to `sample.expected.gpl` byte for byte.
 If a change stops that passing, the change is wrong.
+
+An `.ase` written by this library opens in Suisai with its names intact, which is the check
+that matters: the app's reader is stricter than this one.
 
 ## Where it came from
 

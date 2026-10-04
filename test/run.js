@@ -43,5 +43,12 @@ check('a nameless colour is kept', messy.colours[2].name, '');
 const back = readGpl(new TextEncoder().encode(expected).buffer);
 check('gpl -> ase -> gpl reproduces itself', writeGpl(readAse(writeAse(back.colours)).colours, 'sample'), expected);
 
+// 4. The other direction, which the round trip above does not reach. An unnamed swatch becomes
+//    "Untitled" in GPL because the format needs something after the numbers, and must come back
+//    out of ASE unnamed again rather than carrying a name nobody chose.
+const trip = readAse(writeAse(readGpl(new TextEncoder().encode(writeGpl(ase.colours, 'sample')).buffer).colours));
+check('ase -> gpl -> ase leaves the unnamed swatch unnamed', trip.colours[4].name, '');
+check('and does not touch the named ones', trip.colours[0].name, 'Brand Primary');
+
 console.log(failures ? `\n  ${failures} failed` : '\n  all passed');
 process.exit(failures ? 1 : 0);

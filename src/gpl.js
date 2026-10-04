@@ -34,12 +34,14 @@ export function readGpl(buffer) {
 }
 
 /** Channels right-aligned to three characters, single spaces between, a tab before the name. */
+import { isUnnamed } from './colour.js';
+
 export function writeGpl(colours, paletteName = 'Untitled') {
   const rows = colours.map(({ name, rgb }) => {
     const n = rgb.map((c) => String(c).padStart(3)).join(' ');
     // GPL needs something after the numbers, so an unnamed swatch is given the one word Suisai
     // uses for the same case rather than being written out blank.
-    return `${n}\t${name && name.trim() ? name : 'Untitled'}`;
+    return `${n}\t${isUnnamed(name) ? 'Untitled' : name}`;
   });
   return `GIMP Palette\nName: ${paletteName}\nColumns: 0\n#\n${rows.join('\n')}\n`;
 }

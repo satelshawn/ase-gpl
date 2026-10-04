@@ -2,7 +2,7 @@
 //
 // The format nests colours in groups. This reads past the group markers and returns a flat list,
 // which is what every destination format wants and what Suisai itself does.
-import { rgbFromUnit, rgbFromGray, rgbFromCmyk, rgbFromLab } from './colour.js';
+import { rgbFromUnit, rgbFromGray, rgbFromCmyk, rgbFromLab, isUnnamed } from './colour.js';
 
 const COLOUR = 0x0001;
 const GROUP_START = 0xc001;
@@ -62,7 +62,7 @@ export function readAse(buffer) {
 
 /** One colour block each, model "RGB ", kind 2 (normal), no groups. */
 export function writeAse(colours) {
-  const names = colours.map((c) => Array.from(c.name ?? ''));
+  const names = colours.map((c) => (isUnnamed(c.name) ? [] : Array.from(c.name)));
   const size = 12 + names.reduce((n, chars) => n + 6 + 2 + (chars.length + 1) * 2 + 4 + 12 + 2, 0);
   const buf = new ArrayBuffer(size);
   const v = new DataView(buf);

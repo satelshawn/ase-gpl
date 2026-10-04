@@ -59,3 +59,12 @@ export const rgbFromLab = ([l, a, bb]) => {
   const lin = apply(XYZ_TO_RGB, apply(BRADFORD_D50_D65, xyz50));
   return lin.map((c) => byte(encode(Math.max(0, Math.min(1, c)))));
 };
+
+/**
+ * GPL cannot express "no name": it needs something after the numbers, and writes "Untitled".
+ * So "Untitled" means unnamed on the way back in, and ASE, which can hold an empty name, gets one.
+ */
+export const isUnnamed = (name) => {
+  const n = (name ?? '').trim();
+  return n === '' || n === 'Untitled';
+};
