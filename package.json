@@ -1,0 +1,15 @@
+{
+  "name": "ase-gpl",
+  "version": "1.0.0",
+  "description": "Read and write Adobe Swatch Exchange (.ase) and GIMP palette (.gpl) files. Dependency-free ES modules, browser or Node.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": { ".": "./src/index.js" },
+  "files": ["src"],
+  "scripts": { "test": "node test/run.js" },
+  "keywords": ["ase", "gpl", "palette", "swatches", "adobe-swatch-exchange", "gimp", "colour", "color"],
+  "license": "MIT",
+  "author": "Shawn Truesdell",
+  "repository": { "type": "git", "url": "https://github.com/satelshawn/ase-gpl.git" },
+  "homepage": "https://suisai.design/convert-palettes/"
+}

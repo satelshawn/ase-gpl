@@ -1,0 +1,11 @@
+GIMP Palette
+Name: Messy input
+Columns: 4
+# a comment
+
+255   0   0 Red
+0 128 0	Leaf green  
+  0   0 255
+300 0 0 Out of range, skipped
+not a colour line
+ 16  32  48 Name with   inner spaces
