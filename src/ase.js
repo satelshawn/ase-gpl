@@ -17,6 +17,8 @@ const TO_RGB = { 'RGB ': rgbFromUnit, 'GRAY': rgbFromGray, 'CMYK': rgbFromCmyk, 
  *   than guessed at, because a silently wrong colour is worse than a missing one. `models` is
  *   which models were actually seen, so the page can name the CMYK approximation only when a
  *   file contains one rather than warning everybody about something that did not happen.
+ *   `truncated` is true when the file ended before its last block did; the colours before that
+ *   point are returned.
  */
 export function readAse(buffer) {
   const v = new DataView(buffer);
@@ -28,12 +30,16 @@ export function readAse(buffer) {
   const colours = [];
   const models = new Set();
   let skipped = 0;
+  let truncated = false;
   let at = 12;
 
   for (let i = 0; i < blocks && at + 6 <= v.byteLength; i++) {
     const type = v.getUint16(at);
     const length = v.getUint32(at + 2);
     const body = at + 6;
+    // A block that claims more than the file holds means the file was cut short. Keep what was
+    // read before it and stop, as Suisai does, rather than reading past the end.
+    if (body + length > v.byteLength) { truncated = true; break; }
     // Always step by the block's own length. Stepping by what was parsed desynchronises the
     // whole file the moment one block holds something unexpected.
     at = body + length;
@@ -42,7 +48,11 @@ export function readAse(buffer) {
     if (type !== COLOUR) continue;
 
     let p = body;
+    // Every read below stays inside this block; a block whose own fields overrun it is damaged.
+    const end = body + length;
+    if (length < 2) { skipped++; continue; }
     const nameUnits = v.getUint16(p); p += 2;           // includes the trailing null
+    if (p + nameUnits * 2 + 4 > end) { skipped++; continue; }
     let name = '';
     for (let u = 0; u < nameUnits; u++, p += 2) {
       const code = v.getUint16(p);
@@ -51,18 +61,22 @@ export function readAse(buffer) {
     const model = String.fromCharCode(v.getUint8(p), v.getUint8(p + 1), v.getUint8(p + 2), v.getUint8(p + 3));
     p += 4;
     const count = FLOATS[model];
-    if (!count) { skipped++; continue; }
+    if (!count || p + count * 4 > end) { skipped++; continue; }
     const values = [];
     for (let f = 0; f < count; f++, p += 4) values.push(v.getFloat32(p));
     models.add(model.trim());
     colours.push({ name, rgb: TO_RGB[model](values) });
   }
-  return { colours, skipped, models };
+  return { colours, skipped, models, truncated };
 }
+
+/** UTF-16 code units of a name. Not code points: a character outside the basic plane, an emoji
+ *  say, is two units, and the format counts and stores units. */
+const units = (name) => Array.from({ length: name.length }, (_, i) => name.charCodeAt(i));
 
 /** One colour block each, model "RGB ", kind 2 (normal), no groups. */
 export function writeAse(colours) {
-  const names = colours.map((c) => (isUnnamed(c.name) ? [] : Array.from(c.name)));
+  const names = colours.map((c) => (isUnnamed(c.name) ? [] : units(c.name)));
   const size = 12 + names.reduce((n, chars) => n + 6 + 2 + (chars.length + 1) * 2 + 4 + 12 + 2, 0);
   const buf = new ArrayBuffer(size);
   const v = new DataView(buf);
@@ -79,7 +93,7 @@ export function writeAse(colours) {
     v.setUint16(at, 0x0001); at += 2;
     v.setUint32(at, length); at += 4;
     v.setUint16(at, chars.length + 1); at += 2;        // the null is counted
-    for (const ch of chars) { v.setUint16(at, ch.charCodeAt(0)); at += 2; }
+    for (const unit of chars) { v.setUint16(at, unit); at += 2; }
     v.setUint16(at, 0); at += 2;
     'RGB '.split('').forEach((ch) => { v.setUint8(at, ch.charCodeAt(0)); at += 1; });
     for (const channel of c.rgb) { v.setFloat32(at, channel / 255); at += 4; }

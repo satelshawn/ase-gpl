@@ -49,6 +49,25 @@ check('gpl -> ase -> gpl reproduces itself', writeGpl(readAse(writeAse(back.colo
 const trip = readAse(writeAse(readGpl(new TextEncoder().encode(writeGpl(ase.colours, 'sample')).buffer).colours));
 check('ase -> gpl -> ase leaves the unnamed swatch unnamed', trip.colours[4].name, '');
 check('and does not touch the named ones', trip.colours[0].name, 'Brand Primary');
+// 5. A file cut short. Whatever was whole before the cut is returned, and the result says so;
+//    nothing throws, because a page that dies on a damaged file tells the visitor nothing.
+const whole = vector('sample.ase');
+for (const cut of [40, 100, whole.length - 3]) {
+  let outcome;
+  try { const r = readAse(bytes(whole.subarray(0, cut))); outcome = r.truncated ? 'truncated' : 'complete'; }
+  catch (e) { outcome = 'threw ' + e.constructor.name; }
+  check(`sample.ase cut to ${cut} bytes is reported, not thrown`, outcome, 'truncated');
+}
+check('the whole file is not called truncated', ase.truncated, false);
+
+// 6. Names outside the basic plane. An emoji is two UTF-16 units; ASE counts and stores units.
+const emoji = 'Sunset \u{1F305}';
+check('an emoji in a name survives ASE', readAse(writeAse([{ name: emoji, rgb: [1, 2, 3] }])).colours[0].name, emoji);
+
+// 7. One swatch, one line. A line break or a tab inside a name must not break the GPL.
+const broken = writeGpl([{ name: 'line\nbreak\tand tab', rgb: [1, 2, 3] }], 'x');
+check('a line break in a name stays on its line', broken.split('\n').length, 6);
+check('and reads back as one colour', readGpl(new TextEncoder().encode(broken).buffer).colours[0].name, 'line break and tab');
 
 console.log(failures ? `\n  ${failures} failed` : '\n  all passed');
 process.exit(failures ? 1 : 0);

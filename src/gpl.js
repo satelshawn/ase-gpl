@@ -39,9 +39,12 @@ import { isUnnamed } from './colour.js';
 export function writeGpl(colours, paletteName = 'Untitled') {
   const rows = colours.map(({ name, rgb }) => {
     const n = rgb.map((c) => String(c).padStart(3)).join(' ');
+    // One swatch is one line. A name can carry a line break or a tab (ASE allows anything), and
+    // written as it stands that would end the line early and leave the rest as a stray one.
+    const flat = (name ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').trim();
     // GPL needs something after the numbers, so an unnamed swatch is given the one word Suisai
     // uses for the same case rather than being written out blank.
-    return `${n}\t${isUnnamed(name) ? 'Untitled' : name}`;
+    return `${n}\t${isUnnamed(flat) ? 'Untitled' : flat}`;
   });
   return `GIMP Palette\nName: ${paletteName}\nColumns: 0\n#\n${rows.join('\n')}\n`;
 }

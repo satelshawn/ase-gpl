@@ -71,6 +71,17 @@ not. A line with a channel over 255, or no numbers at all, is ignored and the re
 **Encoding falls back.** A `.gpl` file is read as UTF-8, then as Windows-1252 for older files written
 before anyone agreed on encodings.
 
+**A damaged file is reported, not thrown.** An `.ase` cut short, by a failed download or a bad
+copy, returns the swatches that were whole with `truncated: true` beside them. A converter that
+dies on a damaged file tells its user nothing.
+
+**Emoji survive.** ASE counts and stores UTF-16 units, not characters, so a name outside the
+basic plane has to be written two units at a time. `Sunset 🌅` round-trips.
+
+**One swatch stays one line.** ASE allows a line break or a tab inside a name; GPL is
+line-based and would be broken by one. Control characters are flattened to a space on the way
+out.
+
 ## What it does not do
 
 **CMYK is an approximation.** Converting CMYK properly needs an ICC profile, which a browser
